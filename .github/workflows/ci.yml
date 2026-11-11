@@ -1,0 +1,21 @@
+name: ci
+# Offline checks only (no runner, no network calls to TTDU).
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --ignore-scripts
+      - run: npm run build
+      - run: node test/inputs.test.cjs
+      - run: node -e "const {Ttdu}=require('./dist/nodes/Ttdu/Ttdu.node.js');const {TtduApi}=require('./dist/credentials/TtduApi.credentials.js');console.log(new Ttdu().description.name,new TtduApi().name)"
+      - run: npm pack --dry-run

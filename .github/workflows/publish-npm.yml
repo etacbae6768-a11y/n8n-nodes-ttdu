@@ -1,0 +1,23 @@
+name: publish-npm
+# npm Trusted Publishing (GitHub Actions OIDC, no stored token) with provenance.
+# npmjs.com trusted publisher for n8n-nodes-ttdu: this repository, publish-npm.yml, environment npm.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@latest
+      - run: npm install --no-audit --no-fund --ignore-scripts
+      - run: npm run build
+      - run: node test/inputs.test.cjs
+      - run: npm publish --provenance --access public

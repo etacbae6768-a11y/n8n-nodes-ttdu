@@ -1,0 +1,117 @@
+{
+  "name": "TTDU folder HWP → PDF",
+  "active": false,
+  "id": "ttduWfFolder0001",
+  "nodes": [
+    {
+      "id": "f1",
+      "name": "New file in folder",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/data/in-hwp",
+        "events": [
+          "add"
+        ],
+        "options": {}
+      }
+    },
+    {
+      "id": "f2",
+      "name": "Read file",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "={{ $json.path }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f3",
+      "name": "TTDU",
+      "type": "n8n-nodes-ttdu.ttdu",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "credentials": {
+        "ttduApi": {
+          "id": "ttduLocal00001",
+          "name": "TTDU this PC"
+        }
+      },
+      "parameters": {
+        "flow": "HWP",
+        "binaryProperties": "data",
+        "client": "",
+        "date": "",
+        "options": {}
+      }
+    },
+    {
+      "id": "f4",
+      "name": "Write PDF",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/data/out-pdf/{{ $('Read file').item.binary.data.fileName.replace(/\\.hwpx?$/i, '') }}.pdf",
+        "dataPropertyName": "file0",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "New file in folder": {
+      "main": [
+        [
+          {
+            "node": "Read file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read file": {
+      "main": [
+        [
+          {
+            "node": "TTDU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTDU": {
+      "main": [
+        [
+          {
+            "node": "Write PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

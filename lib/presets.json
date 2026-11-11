@@ -1,0 +1,188 @@
+{
+  "A": {
+    "schema": "ttdu.flow/v1",
+    "name": "증빙 사진 → PDF 한 부 (거래처_날짜)",
+    "vars": [
+      {
+        "key": "client",
+        "label": {
+          "ko": "거래처",
+          "en": "Client"
+        }
+      },
+      {
+        "key": "date",
+        "label": {
+          "ko": "날짜(YYYYMMDD)",
+          "en": "Date (YYYYMMDD)"
+        },
+        "pattern": "^\\d{8}$",
+        "default": "today"
+      }
+    ],
+    "steps": [
+      {
+        "tool": "image.batch",
+        "scope": "all",
+        "options": {
+          "auto_orient": true,
+          "resize": {
+            "long_edge": 1600
+          },
+          "format": "jpeg",
+          "quality": 0.85
+        },
+        "onlyKind": "image",
+        "op": "resize"
+      },
+      {
+        "tool": "pdf.from_images",
+        "scope": "all",
+        "options": {
+          "page_size": "a4",
+          "orientation": "auto",
+          "fit": "contain",
+          "margin": 18
+        },
+        "onlyKind": "image",
+        "op": "to_pdf"
+      },
+      {
+        "tool": "pdf.fit_size",
+        "scope": "each",
+        "options": {
+          "target_bytes": 1048576,
+          "allow_raster": true
+        },
+        "onlyKind": "pdf",
+        "op": "size",
+        "outName": "{client}_{date}"
+      }
+    ],
+    "expect": [
+      {
+        "check": "page_count",
+        "value": "inputs"
+      },
+      {
+        "check": "max_bytes",
+        "value": 1048576,
+        "kind": "pdf"
+      },
+      {
+        "check": "format",
+        "value": "pdf"
+      },
+      {
+        "check": "out_name",
+        "template": "{client}_{date}"
+      }
+    ]
+  },
+  "B": {
+    "schema": "ttdu.flow/v1",
+    "name": "급여명세서 검수 (급여대장 하나 → 4대보험·소득세 재계산)",
+    "vars": [
+      {
+        "key": "client",
+        "label": {
+          "ko": "거래처",
+          "en": "Client"
+        }
+      },
+      {
+        "key": "date",
+        "label": {
+          "ko": "날짜(YYYYMMDD)",
+          "en": "Date (YYYYMMDD)"
+        },
+        "pattern": "^\\d{8}$",
+        "default": "today"
+      }
+    ],
+    "steps": [
+      {
+        "tool": "payroll.check_kr",
+        "scope": "each",
+        "options": {
+          "tolerance": 0
+        },
+        "op": "payroll_check",
+        "outName": "{client}_급여검수_{date}"
+      }
+    ],
+    "expect": [
+      {
+        "check": "format",
+        "value": "xlsx"
+      },
+      {
+        "check": "out_name",
+        "template": "{client}_급여검수_{date}"
+      }
+    ]
+  },
+  "C": {
+    "schema": "ttdu.flow/v1",
+    "name": "고객 서류 개인정보 가리기 (주민번호·전화·계좌)",
+    "steps": [
+      {
+        "tool": "redact.pdf",
+        "scope": "each",
+        "options": {
+          "terms": "@pii:rrn,phone,account",
+          "term_box": "chars"
+        },
+        "onlyKind": "pdf",
+        "op": "redact"
+      },
+      {
+        "tool": "redact.image",
+        "scope": "each",
+        "options": {
+          "regions": "@pii:rrn,phone,account"
+        },
+        "onlyKind": "image",
+        "op": "redact"
+      },
+      {
+        "tool": "meta.strip",
+        "scope": "each",
+        "options": {},
+        "op": "strip_meta"
+      }
+    ],
+    "expect": [
+      {
+        "check": "pii_absent",
+        "kinds": [
+          "rrn",
+          "phone",
+          "account"
+        ]
+      }
+    ]
+  },
+  "HWP": {
+    "schema": "ttdu.flow/v1",
+    "name": "HWP·HWPX → PDF",
+    "steps": [
+      {
+        "scope": "each",
+        "tool": "hwp.to_pdf",
+        "options": {}
+      }
+    ]
+  },
+  "HWP_TEXT": {
+    "schema": "ttdu.flow/v1",
+    "name": "HWP·HWPX → 텍스트",
+    "steps": [
+      {
+        "scope": "each",
+        "tool": "hwp.extract_text",
+        "options": {}
+      }
+    ]
+  }
+}

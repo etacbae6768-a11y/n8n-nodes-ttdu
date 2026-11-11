@@ -1,0 +1,112 @@
+{
+  "name": "TTDU HWP to PDF (webhook)",
+  "active": false,
+  "id": "ttduWf0000000004",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ttdu-wh-hwp-0001",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ttdu-hwp",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "TTDU",
+      "type": "n8n-nodes-ttdu.ttdu",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "credentials": {
+        "ttduApi": {
+          "id": "ttduLocal00001",
+          "name": "TTDU this PC"
+        }
+      },
+      "parameters": {
+        "flow": "HWP",
+        "binaryProperties": "",
+        "client": "={{ $json.body.client || \"\" }}",
+        "date": "={{ $json.body.date || \"\" }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Files to base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const out = [];\nfor (const [i, it] of $input.all().entries()) {\n  const files = [];\n  for (const f of it.json.files || []) {\n    const b = await this.helpers.getBinaryDataBuffer(i, f.binaryProperty);\n    files.push({ name: f.name, mime: f.mime, size: f.size, sha256: f.sha256, base64: b.toString('base64') });\n  }\n  out.push({ json: { ok: it.json.ok, count: it.json.count, notes: it.json.notes, files } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TTDU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTDU": {
+      "main": [
+        [
+          {
+            "node": "Files to base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Files to base64": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
