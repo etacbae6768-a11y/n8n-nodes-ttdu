@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4
+- Requests now go through n8n's own request helper (`httpRequestWithAuthentication`), so n8n proxy settings apply and the `X-API-Key` header comes from the credential. The client code moved from a hand-written CommonJS file into the TypeScript sources (`nodes/Ttdu/client.ts`, `presets.ts`); same endpoint, body, outputs and error messages.
+- **Client** and **Date** are shown only for flows A and B, which use them.
+- The credential's documentation link points at this repository.
+- README: the node is meant for self-hosted n8n on the PC that runs the TTDU runner; on n8n Cloud only the hub's server-side tools work.
+
 ## 0.3.3
 - Moved to a dedicated repository (github.com/etacbae6768-a11y/n8n-nodes-ttdu) for n8n verification; no functional changes. Published from this repository with GitHub Actions and an npm provenance statement.
 

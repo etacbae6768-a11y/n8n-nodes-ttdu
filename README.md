@@ -12,6 +12,10 @@ Examples: 01–04 webhook → TTDU (A/B/C/HWP) → respond with the result files
 
 n8n itself is under the Sustainable Use License: install and run n8n yourself for your own business. This node is separate MIT code and does not include n8n.
 
+## n8n Cloud or self-hosted?
+
+The ready flows (A, B, C, HWP, HWP_TEXT) run on **the TTDU runner on your own PC** (`http://127.0.0.1:8790`). That keeps the files on the PC, and it also means this node is meant for **self-hosted n8n on the same PC** (or Docker Desktop on it). On **n8n Cloud** the Cloud server cannot reach your PC, so only the server-side tools of the TTDU hub work there (custom flows with tools such as `pdf.merge`; files are sent to the hub); the ready flows answer `422 unsupported` on the hub. We keep it this way on purpose: running the office flows on our server would mean receiving your office files, which is what TTDU is built to avoid. For that reason this package stays a community node and is not submitted for n8n verification.
+
 ## Where do my files go?
 
 | Target | URL | Files |

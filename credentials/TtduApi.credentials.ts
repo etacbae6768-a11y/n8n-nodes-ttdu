@@ -8,7 +8,7 @@ export class TtduApi implements ICredentialType {
 
 	icon: Icon = { light: 'file:ttdu.svg', dark: 'file:ttdu.dark.svg' };
 
-	documentationUrl = 'https://github.com/etacbae6768-a11y/ttdu-integrations/tree/main/n8n-nodes-ttdu#readme';
+	documentationUrl = 'https://github.com/etacbae6768-a11y/n8n-nodes-ttdu#readme';
 
 	properties: INodeProperties[] = [
 		{
@@ -67,7 +67,7 @@ export class TtduApi implements ICredentialType {
 
 	authenticate: IAuthenticateGeneric = {
 		type: 'generic',
-		properties: { headers: { 'X-API-Key': '={{$credentials.apiKey}}' } },
+		properties: { headers: { 'X-API-Key': '={{String($credentials.apiKey).trim()}}' } },
 	};
 
 	test: ICredentialTestRequest = {

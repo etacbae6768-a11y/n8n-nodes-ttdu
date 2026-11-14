@@ -8,23 +8,8 @@ import {
 	type INodeType,
 	type INodeTypeDescription,
 } from 'n8n-workflow';
+import { buildRunRequest, parseRunResponse, type TtduResult } from './client';
 import { MAX_INPUT_BYTES, MAX_INPUTS, baseName, fileNameFromUrl, hostAllowed, isAbsolutePath, isInsideFolder, normalizePath, parseList } from './inputs';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const client = require('../../lib/ttdu-client.cjs') as {
-	runFlow: (
-		auth: { target: string; baseUrl?: string; apiKey: string },
-		flow: unknown,
-		files: Array<{ name: string; data: Buffer }>,
-		vars: Record<string, string>,
-		opts?: { deliver?: unknown },
-	) => Promise<{
-		ok: boolean;
-		notes: unknown[];
-		deliveries?: unknown[];
-		outputs: Array<{ name: string; mime?: string; size: number; sha256: string; data: Buffer }>;
-	}>;
-};
 
 export class Ttdu implements INodeType {
 	description: INodeTypeDescription = {
@@ -107,6 +92,7 @@ export class Ttdu implements INodeType {
 				name: 'client',
 				type: 'string',
 				default: '',
+				displayOptions: { show: { flow: ['A', 'B'] } },
 				description: 'Flow variable "client", used by flows A and B for the result name',
 			},
 			{
@@ -114,8 +100,9 @@ export class Ttdu implements INodeType {
 				name: 'date',
 				type: 'string',
 				default: '',
+				displayOptions: { show: { flow: ['A', 'B'] } },
 				placeholder: '20261106',
-				description: 'Flow variable "date" (YYYYMMDD)',
+				description: 'Flow variable "date" (YYYYMMDD), used by flows A and B',
 			},
 			{
 				displayName: 'Options',
@@ -275,9 +262,20 @@ export class Ttdu implements INodeType {
 			const date = this.getNodeParameter('date', i, '') as string;
 			if (clientName) vars.client = clientName;
 			if (date) vars.date = date;
-			let r;
+			let r: TtduResult;
 			try {
-				r = await client.runFlow(auth, flow, files, vars, deliver ? { deliver } : undefined);
+				const req = buildRunRequest(auth, flow, files, vars, deliver ? { deliver } : undefined);
+				const res = (await this.helpers.httpRequestWithAuthentication.call(this, 'ttduApi', {
+					method: 'POST',
+					url: req.url,
+					headers: { 'Content-Type': req.contentType },
+					body: req.body,
+					encoding: 'arraybuffer',
+					returnFullResponse: true,
+					ignoreHttpStatusErrors: true,
+					timeout: 600000,
+				})) as { statusCode?: number; body: unknown };
+				r = parseRunResponse(Number(res.statusCode || 0), res.body);
 			} catch (e) {
 				throw new NodeOperationError(this.getNode(), (e as Error).message, { itemIndex: i });
 			}

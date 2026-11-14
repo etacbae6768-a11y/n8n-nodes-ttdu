@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-ttdu",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "n8n community node for TTDU (Tools That Don't Upload): run document flows (receipt photos to PDF, payroll check, redaction, HWP to PDF) on this PC's offline runner or the TTDU hub API.",
   "license": "MIT",
   "author": {
